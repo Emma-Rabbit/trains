@@ -6,4 +6,5 @@ urlpatterns = [
     path('carriages/', views.carriage_list),
     path('lineplatforms/', views.lineplatform_list),
     path('connections/', views.connection_list),
+    path('buy/', views.buy_ticket),
 ]

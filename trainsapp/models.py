@@ -12,7 +12,7 @@ class CarriageClass(models.Model):
         return 'class: {}'.format(self.Name)
 
 class Carriage(models.Model):
-    Train = models.ForeignKey(Train,related_name='Carriages', on_delete=models.CASCADE)
+    Train = models.ForeignKey(Train, on_delete=models.CASCADE) # usunęłam tu takie coś related_name='Carriages' idk co to xd
     CarriageClass = models.ForeignKey(CarriageClass, on_delete=models.CASCADE)
     def __str__(self):
         return 'id : {}, train: {}, {}'.format(self.id, self.Train, self.CarriageClass)
@@ -25,12 +25,6 @@ class Station(models.Model):
 class Line(models.Model):
     def __str__(self):
         return '{}'.format(self.id)
-
-class TrainLine(models.Model):
-    Train = models.ForeignKey(Train, on_delete=models.CASCADE)
-    Line = models.ForeignKey(Line, on_delete=models.CASCADE)
-    def __str__(self):
-        return '{} {} {}'.format(self.id, self.Train, self.Line)
 
 class Platform(models.Model):
     Station = models.ForeignKey(Station, on_delete=models.CASCADE)
@@ -50,11 +44,15 @@ class Platform(models.Model):
 
 class Seat(models.Model):
     Carriage = models.ForeignKey(Carriage, on_delete=models.CASCADE)
-    # SeatPos = models.ForeignKey(SeatPos, on_delete=models.CASCADE)
-    # Number = models.CharField(max_length=3)
     Number = models.IntegerField(validators=[MaxValueValidator(100), MinValueValidator(1)])
     def __str__(self):
-        return '{} {} {} {}'.format(self.id, self.Carriage, self.Number)
+        return '{} {} {}'.format(self.id, self.Carriage, self.Number)
+
+# class TakenSeat(models.Model):
+#     Seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
+#     FromLineplatform = models.ForeignKey(LinePlatform, on_delete=models.CASCADE)
+#     ToLineplatform = models.ForeignKey(LinePlatform, on_delete=models.CASCADE)
+#     Departure = models.ForeignKey(Departure, on_delete=models.CASCADE)
 
 class LinePlatform(models.Model):
     Platform = models.ForeignKey(Platform, on_delete=models.CASCADE)
@@ -82,9 +80,9 @@ class Ticket(models.Model):
     Destination = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name='dest')
     StartPlatform = models.ForeignKey(Platform, on_delete=models.CASCADE)
     Departure = models.ForeignKey(Departure, on_delete=models.CASCADE)
-    Date = models.DateField()
+    Day = models.DateField()
     def __str__(self):
-        return '{} {} {} {} {}'.format(self.id, self.Platform, self.Destination, self.Departure, self.Departure)
+        return '{} {} {} {} {}'.format(self.id, self.Platform, self.Destination, self.Departure, self.Day)
 
 class Reservation(models.Model):
     Ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)

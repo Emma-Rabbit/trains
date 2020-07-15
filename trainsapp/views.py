@@ -49,29 +49,25 @@ def lineplatform_list(request):
 @api_view(['GET'])
 def connection_list(request):
     if request.GET.get('from','') and request.GET.get('to',''):
-        from_station = models.Station.objects.get(Name=request.GET.get('from',''))
-        to_station = models.Station.objects.get(Name=request.GET.get('to',''))
-        print('STATIONS: ', from_station, to_station)
-
-        from_platforms = models.Platform.objects.filter(Station=from_station)
-        to_platforms = models.Platform.objects.filter(Station=to_station)
-        print("PLATFORMS: ", from_platforms, to_platforms)
-
-        from_lineplatforms = models.LinePlatform.objects.filter(Platform__in=from_platforms)
-        to_lineplatforms = models.LinePlatform.objects.filter(Platform__in=to_platforms)
-        print("LINEPLATFORMS: ", from_lineplatforms, to_lineplatforms)
-
-        lines = []
-        for from_lineplatform in from_lineplatforms:
-            for to_lineplatform in to_lineplatforms:
-                if from_lineplatform.Line_id == to_lineplatform.Line_id and from_lineplatform.Order < to_lineplatform.Order:
-                    departure = models.Departure.objects.get(Line_id=from_lineplatform.Line_id)
-                    lines.append({
-                        'start': from_lineplatform, 
-                        'finish': to_lineplatform,
-                        'departure_time': helpers.GetDepartureTime(from_lineplatform.Line_id,from_lineplatform.Order),
-                    })
-        print(lines)
-        serializer = serializers.ConnectionSerializer(lines, many=True)
+        stations = helpers.GetConnectedStations(request.GET.get('from',''), request.GET.get('to',''))
+        platforms = helpers.GetConnectedPlatforms(stations)
+        lineplatforms = helpers.GetConnectedLinePlatforms(platforms)
+        connections = helpers.GetConnectionsDataForSerializer(lineplatforms)
+        serializer = serializers.ConnectionSerializer(connections, many=True)
         return Response(serializer.data)
     
+@api_view(['GET', 'POST'])
+def buy_ticket(request):
+    if request.method == 'GET':
+        if request.GET.get('from','') and request.GET.get('to',''):
+            stations = helpers.GetConnectedStations(request.GET.get('from',''),    request.GET.get('to',''))
+            platforms = helpers.GetConnectedPlatforms(stations)
+            lineplatforms = helpers.GetConnectedLinePlatforms(platforms)
+            connections = helpers.GetConnectionsDataForSerializer(lineplatforms)
+
+            connections = helpers.AddDataForBuyer(connections)
+
+            serializer = serializers.DataForBuyerSerializer(connections, many=True)
+            return Response(serializer.data)
+    if request.method == 'POST':
+        pass
