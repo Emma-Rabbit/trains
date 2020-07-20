@@ -1,5 +1,6 @@
 from . import models
 from datetime import time, timedelta, datetime
+from math import sqrt
 
 def GetDepartureTime(line, order):
     lineplatforms = models.LinePlatform.objects.filter(Line=models.Line.objects.get(pk=line), Order__lt=order)
@@ -58,3 +59,14 @@ def AddDataForBuyer(connections):
         seats = models.Seat.objects.filter(Carriage__in=carriages)
         connection['seats'] = seats
     return connections
+
+def CalculateReservationPrice(start, finish, discountid):
+    start = models.LinePlatform.objects.get(pk=start)
+    finish = models.LinePlatform.objects.get(pk=finish)
+    lineplatforms = models.LinePlatform.objects.filter(Line=start.Line, Order__gte=start.Order).filter(Order__lt=finish.Order)
+    distance = 0
+    for lp in lineplatforms:
+        distance += lp.DistanceToNext
+    discount = models.Discount.objects.get(pk=discountid).Percentage
+    price = sqrt(distance)*discount/100
+    return round(price, 2)

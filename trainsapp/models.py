@@ -77,17 +77,17 @@ class Discount(models.Model):
         return '{} {}'.format(self.Name, self.Percentage)
 
 class Ticket(models.Model):
-    Destination = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name='dest')
-    StartPlatform = models.ForeignKey(Platform, on_delete=models.CASCADE)
+    Destination = models.ForeignKey(LinePlatform, on_delete=models.CASCADE, related_name='dest')
+    StartPlatform = models.ForeignKey(LinePlatform, on_delete=models.CASCADE)
     Departure = models.ForeignKey(Departure, on_delete=models.CASCADE)
     Day = models.DateField()
     def __str__(self):
-        return '{} {} {} {} {}'.format(self.id, self.Platform, self.Destination, self.Departure, self.Day)
+        return '{} {} {} {} {}'.format(self.id, self.StartPlatform, self.Destination, self.Departure, self.Day)
 
 class Reservation(models.Model):
     Ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
     Discount = models.ForeignKey(Discount, on_delete=models.CASCADE)
     Seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
-    Price = models.IntegerField()
+    Price = models.FloatField()
     def __str__(self):
         return '{} {}'.format(self.Ticket, self.Seat, self.Price)

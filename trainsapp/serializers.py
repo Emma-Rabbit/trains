@@ -64,3 +64,17 @@ class DataForBuyerSerializer(serializers.Serializer):
     arrival_time = serializers.TimeField(required=True)
     carriages = CarriageSerializer(many=True)
     seats = SeatSerializer(many=True)
+
+class ReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Reservation
+        fields = ['id', 'Ticket', 'Discount', 'Seat', 'Price']
+
+class TicketSerializer(serializers.ModelSerializer):
+    Day = serializers.DateField(input_formats=['%Y-%m-%d'])
+    class Meta:
+        model = models.Ticket
+        fields = ['id','Destination','StartPlatform', 'Departure', 'Day']    
+    def create(self, validated_data):
+        print("DATA IN TICKET SERIALIZER: ",validated_data)
+        return super().create(validated_data)

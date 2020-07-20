@@ -6,6 +6,7 @@ from . import helpers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime
 
 class TrainViewSet(viewsets.ModelViewSet):
     queryset = models.Train.objects.all()
@@ -27,7 +28,7 @@ def carriage_list(request):
         if serializer.is_valid():
             newCarriage = serializer.save()
             print(newCarriage)
-            for seat in range(1,101):
+            for seat in range(1,11):
                 s = models.Seat(Carriage=models.Carriage.objects.get(pk=newCarriage.id), Number=seat)
                 s.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -70,4 +71,37 @@ def buy_ticket(request):
             serializer = serializers.DataForBuyerSerializer(connections, many=True)
             return Response(serializer.data)
     if request.method == 'POST':
-        pass
+        print('POST REQUEST: ',request.data)
+        print('request.data destid: ',request.data['destination_id'])
+        ticket_data = {
+            'Destination' : request.data['destination_id'],
+            'StartPlatform' : request.data['startplatform_id'],
+            'Departure' : request.data['departure_id'],
+            'Day' : request.data['day']
+            }
+        ticket_serializer = serializers.TicketSerializer(data=ticket_data)
+        if not ticket_serializer.is_valid():
+            return Response(ticket_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        new_ticket = ticket_serializer.save()
+        reservations_data = []
+        new_res =[]
+        isvalid = True
+        for reservation in request.data['reservations']:
+            price = helpers.CalculateReservationPrice(ticket_data['StartPlatform'],ticket_data['Destination'], reservation['discount_id'])
+            new_reservation = {
+                'Seat': reservation['seat_id'],
+                'Discount' : reservation['discount_id'],
+                'Ticket' : new_ticket.id,
+                'Price' : price
+                }
+            reser_serializer = serializers.ReservationSerializer(data=new_reservation)
+            if reser_serializer.is_valid():
+                new_res.append(reser_serializer)
+            else:
+                isvalid = False
+        if not isvalid:
+            new_ticket.delete()
+            return Response(reser_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        for res in new_res:
+            res.save()
+        return Response(status=status.HTTP_201_CREATED)
