@@ -49,7 +49,12 @@ class DepartureSerializer(serializers.ModelSerializer):
 class SeatSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Seat
-        fields = ['id','Carriage','Number']
+        fields = ['id','Carriage', 'Number']
+
+class FormattedSeatSerializer(serializers.Serializer):
+    Carriage = CarriageSerializer()
+    Number = serializers.IntegerField()
+    Taken = serializers.BooleanField()
 
 class ConnectionSerializer(serializers.Serializer):
     start = LinePlatformSerializer(required=True)
@@ -63,7 +68,9 @@ class DataForBuyerSerializer(serializers.Serializer):
     departure_time = serializers.TimeField(required=True)
     arrival_time = serializers.TimeField(required=True)
     carriages = CarriageSerializer(many=True)
-    seats = SeatSerializer(many=True)
+    seats = serializers.DictField(
+        child = FormattedSeatSerializer()
+    )
 
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:

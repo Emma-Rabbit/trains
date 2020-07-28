@@ -60,14 +60,14 @@ def connection_list(request):
 @api_view(['GET', 'POST'])
 def buy_ticket(request):
     if request.method == 'GET':
-        if request.GET.get('from','') and request.GET.get('to',''):
-            stations = helpers.GetConnectedStations(request.GET.get('from',''),    request.GET.get('to',''))
+        if request.GET.get('from','') and request.GET.get('to','') and request.GET.get('date',''):
+            stations = helpers.GetConnectedStations(request.GET.get('from',''),request.GET.get('to',''))
             platforms = helpers.GetConnectedPlatforms(stations)
             lineplatforms = helpers.GetConnectedLinePlatforms(platforms)
             connections = helpers.GetConnectionsDataForSerializer(lineplatforms)
-
-            connections = helpers.AddDataForBuyer(connections)
-
+            # print('CONNECTIONS: ',connections)
+            connections = helpers.AddDataForBuyer(connections,request.GET.get('date',''))
+            # print('CONNECTIONS: ',connections)
             serializer = serializers.DataForBuyerSerializer(connections, many=True)
             return Response(serializer.data)
     if request.method == 'POST':

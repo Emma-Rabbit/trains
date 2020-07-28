@@ -45,6 +45,7 @@ def GetConnectionsDataForSerializer(lineplatforms):
                 connections.append({
                     'line' : models.Line.objects.get(pk=from_lineplatform.Line_id),
                     'train' : models.Train.objects.get(pk=departure.Train.id),
+                    'departure': departure,
                     'start': from_lineplatform, 
                     'finish': to_lineplatform,
                     'departure_time': GetDepartureTime(from_lineplatform.Line_id,from_lineplatform.Order),
@@ -52,12 +53,19 @@ def GetConnectionsDataForSerializer(lineplatforms):
                 })
     return connections
 
-def AddDataForBuyer(connections):
+def AddDataForBuyer(connections, date):
     for connection in connections:
         carriages = models.Carriage.objects.filter(Train=connection['train'])
         connection['carriages'] = carriages
         seats = models.Seat.objects.filter(Carriage__in=carriages)
-        connection['seats'] = seats
+        seats_dict = {}
+        for seat in seats:
+            s = {"Carriage" : seat.Carriage,"Number" : seat.Number}
+            seats_dict[seat.id] = s
+        connection['seats'] = seats_dict
+    # print('CONNECTIONS 3: ',connections)
+    connections = GetTakenSeats(connections, date)
+    # print('CONNECTIONS 4: ',connections)
     return connections
 
 def CalculateReservationPrice(start, finish, discountid):
@@ -70,3 +78,22 @@ def CalculateReservationPrice(start, finish, discountid):
     discount = models.Discount.objects.get(pk=discountid).Percentage
     price = sqrt(distance)*discount/100
     return round(price, 2)
+
+def GetTakenSeats(connections, date):
+    for connection in connections:
+        date = datetime.strptime(date,'%Y-%m-%d')
+        # print('-------------DATA:',date, type(date))
+        tickets = models.Ticket.objects.filter(
+            Day=date,
+            StartPlatform__Order__lt=connection['finish'].Order,
+            Destination__Order__gt=connection['start'].Order)
+        print('CONNECTION START, FINISH: ',connection['start'].Order, connection['finish'].Order)
+        # print('TICKETS: ', tickets)
+        reservations = models.Reservation.objects.filter(Ticket__in=tickets)
+        # print('RESERVATIONS: ',reservations)
+        for seat in connection['seats']:
+            connection['seats'][seat]['Taken'] = False
+        for res in reservations:
+            print('SEAT TAKEN = TRUE', res.Seat_id)
+            seat = connection['seats'][res.Seat_id]['Taken'] = True
+    return connections
